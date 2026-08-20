@@ -155,7 +155,7 @@ A violation blocks progression to the next section. Warnings are noted but do no
 ## §11 — Event & Data Tracking
 
 **VIOLATIONS (block):**
-- Any event name does not follow noun_verb convention
+- Any event name follows neither the house `[Category] Title Case` convention nor `noun_verb`
 - An event cannot be traced to a metric in §7
 - A trigger condition is ambiguous or generic (e.g., "when user does something")
 - Data team sign-off checkbox is not present

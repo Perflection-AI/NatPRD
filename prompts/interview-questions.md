@@ -425,7 +425,7 @@ Go through each §7 metric and confirm its event(s) before writing any tracking 
 
 For each confirmed event, ask:
 
-1. What is the event name? (follow noun_verb format — e.g., `payment_initiated`)
+1. What is the event name? (house convention: `[Category] Title Case` — e.g., `[Onboarding] Questionnaire Submitted`; `noun_verb` such as `payment_initiated` is also accepted)
 2. When exactly does this event fire? (be specific — which user action, which screen, which API call)
 3. What properties or data should be attached to this event?
 4. Is this a client-side or server-side event?

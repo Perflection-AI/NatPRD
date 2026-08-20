@@ -19,7 +19,7 @@ Score the PRD out of 100. Report score, violations, and warnings separately.
 | §8 Requirements | 20 | 20 = all user stories with specific roles, ≥2 Gherkin scenarios each, MoSCoW tagged, NFRs with verification. Deduct 3 per story that is not a user story. Deduct 2 per story with generic role. Deduct 3 per story with <2 Gherkin scenarios. Deduct 1 per story with no MoSCoW. Deduct 2 per NFR without verification method. |
 | §9 Solution | 8 | 8 = design links present, coverage map complete, alternatives listed with reasons. Deduct 3 if no design links. Deduct 2 if no coverage map. Deduct 2 if no alternatives. Deduct 1 per alternative with no reason. |
 | §10 Metric Monitoring | 5 | 5 = named DRI, alert thresholds, rollback trigger, review dates. Deduct 1 per missing field. |
-| §11 Event & Data Tracking | 8 | 8 = noun_verb naming, events map to metrics, sign-off present. Deduct 2 per event with invalid naming. Deduct 2 per event with no metric mapping. Deduct 2 if sign-off checkbox is absent. |
+| §11 Event & Data Tracking | 8 | 8 = valid naming (`[Category] Title Case` house convention, or `noun_verb`), events map to metrics, sign-off present. Deduct 2 per event with invalid naming. Deduct 2 per event with no metric mapping. Deduct 2 if sign-off checkbox is absent. |
 | §12 FAQ | 5 | 5 = at least one entry, open items have owners. 3 = present but no owners on open items. 0 = absent. |
 | **Total** | **100** | |
 
@@ -107,7 +107,7 @@ approval date is still a **violation**, because the status asserts those fields 
 | §8 Requirements | Splits stories on `###`/`####` `US-…` headings; user-story format (→0 if none); specific role (−2); ≥2 Gherkin scenarios (−3); MoSCoW priority (−1, violation per `section-rules.md`); NFR verification method (−2) | Story sizing, deterministic Then clauses |
 | §9 Solution | ≥1 real design link (−3); coverage map non-empty (−2); ≥1 alternative with content (−2) and each with a rejection reason (−1) | Coverage map spans every §8 story |
 | §10 Monitoring | Dashboard/tool, DRI, primary alert threshold, rollback trigger, ≥1 review date (−1 each) | Named-vs-team DRI, observable rollback trigger |
-| §11 Tracking | noun_verb naming per real event (−2); sign-off block present (−2); zero-content warning | Event ↔ §7 metric mapping, trigger specificity |
+| §11 Tracking | valid naming per real event — `[Category] Title Case` or `noun_verb` (−2); sign-off block present (−2); zero-content warning | Event ↔ §7 metric mapping, trigger specificity |
 | §12 FAQ | ≥1 real entry and open items have owners → 5; present but lacking → 3; absent → 0 | Resolution plans at Approved |
 
 **Cross-cutting checks** (emitted under a `cross_checks` object, not added to the section score):

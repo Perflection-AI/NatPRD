@@ -60,7 +60,12 @@ HYPOTHESIS_PATTERN = re.compile(
     r"[Ww]e believe\s+.+?\s+for\s+.+?\s+will result in\s+.+?\s+because\s+.+",
     re.DOTALL,
 )
-EVENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9]*(_[a-z0-9]+)+$")
+# House convention (SwingLens): PostHog events are "[Category] Title Case" — see CLAUDE.md.
+# snake_case noun_verb is still accepted for teams that use it.
+EVENT_NAME_PATTERN = re.compile(
+    r"^(?:\[[A-Z][A-Za-z0-9]*\]\s+[A-Z][A-Za-z0-9]*(?:\s+[A-Za-z0-9/+&-]+)*"
+    r"|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)$"
+)
 SOURCE_PATTERN = re.compile(r"\[source:\s*([^\]]+)\]", re.IGNORECASE)
 REFERENCES_HEADING = re.compile(r"^#{1,4}\s+(references|sources)\b", re.IGNORECASE | re.MULTILINE)
 GENERIC_ROLES = {"user", "a user", "the user", "users", "customer", "customers", "client"}
