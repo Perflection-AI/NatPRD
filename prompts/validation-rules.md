@@ -105,12 +105,29 @@ approval date is still a **violation**, because the status asserts those fields 
 | §6 Hypothesis | Filled (non-template) "We believe…" sentence (−3); Falsification condition with content (−3); confidence keyword (−1 warning) | Actual falsifiability, rationale quality |
 | §7 Metrics | Placeholder-only rows ignored; leading (−3), lagging (−3), guardrail row (−2) present; baseline (−1) and target/threshold (−1) per real row | Vanity-metric pairing, owner is individual |
 | §8 Requirements | Splits stories on `###`/`####` `US-…` headings; user-story format (→0 if none); specific role (−2); ≥2 Gherkin scenarios (−3); MoSCoW priority (−1, violation per `section-rules.md`); NFR verification method (−2) | Story sizing, deterministic Then clauses |
-| §9 Solution | ≥1 real design link (−3); coverage map non-empty (−2); ≥1 alternative with content (−2) and each with a rejection reason (−1) | Coverage map spans every §8 story |
+| §9 Solution | ≥1 real design link (−3); coverage map non-empty (−2); ≥1 alternative with content (−2) and each with a rejection reason (−1); Screens rows carry a class name and `New` rows are named, not `[TBD]` (unscored — see cross-cutting) | Coverage map spans every §8 story; class names match the codebase |
 | §10 Monitoring | Dashboard/tool, DRI, primary alert threshold, rollback trigger, ≥1 review date (−1 each) | Named-vs-team DRI, observable rollback trigger |
 | §11 Tracking | valid naming per real event — `[Category] Title Case` or `noun_verb` (−2); sign-off block present (−2); zero-content warning | Event ↔ §7 metric mapping, trigger specificity |
 | §12 FAQ | ≥1 real entry and open items have owners → 5; present but lacking → 3; absent → 0 | Resolution plans at Approved |
+| §17 Contracts | Optional and unscored — see cross-cutting checks below | Contract-vs-implementation boundary, conflict coverage |
 
 **Cross-cutting checks** (emitted under a `cross_checks` object, not added to the section score):
+
+- **Screens** (`screen_warnings`): the §9 Screens table is checked but **never changes the score**.
+  Deterministic part — every filled row needs a class name; a row marked `New` may not leave the
+  class name as `[TBD]`; a class name should end in `ViewController` or `View`; a row with no
+  `Stories` value traces to no requirement. Each failure is a warning, except a missing or `[TBD]`
+  class name on a `New` row, which is a violation per `section-rules.md`. Semantic part
+  (model-only): whether an `Existing` class name actually matches the codebase, and whether every
+  screen-shaped flowchart node uses the table's name verbatim.
+- **API & Data Contracts** (`contract_violations`, `contract_warnings`): §17 is optional and
+  **unscored**, but its violations block `Approved` — the same treatment §13 gets. Deterministic
+  part — the section must contain no code block (contracts are tables only); every filled row
+  needs a `Change` value of `New`, `Modified`, or `Removed`; a Backward Compatibility row marked
+  breaking needs a migration path and a named owner; a Conflict Check row still reading
+  `[TBD — not yet raised]` blocks `Approved`. Semantic part (model-only): whether a row has
+  drifted from contract into implementation detail, whether every contract another team touches
+  actually has a Conflict Check row, and whether new contracts are mirrored in §14 Dependencies.
 
 - **Citations** (`citation_warnings`): every inline `[source: …]` should carry a `retrieved:` date,
   and a `References / Sources` section should exist. Reported as warnings.

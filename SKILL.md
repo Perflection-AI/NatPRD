@@ -22,7 +22,7 @@ When activated, this skill:
 4. **Enforces** the PRD standard — no placeholders, no rule violations allowed
 5. **Outputs** a complete `prd.md` file (default location: `docs/prd.md`)
 
-The 12 core sections, 4 optional sections, scoring rubric, and per-section rules
+The 12 core sections, 5 optional sections, scoring rubric, and per-section rules
 live in the supporting files referenced at the bottom of this document. Load them
 on demand when you need the full text — do not duplicate them here.
 
@@ -92,6 +92,34 @@ This applies without exception to:
 - NEVER fabricate an event name, tracking property, or data destination. If the user has not confirmed a tracking plan, mark every event row: `[TBD — event name to be confirmed by data team]`.
 - NEVER pre-populate the data team sign-off checkbox as complete unless the user explicitly confirms it.
 - NEVER describe a UI or design in prose if no design link exists. Use: `[Design pending — link to be added]`.
+- NEVER invent an endpoint path, data-model name, field name, or table name in §17. Write `[TBD]`.
+- NEVER write a migration path or a retirement date the user did not confirm. A breaking change
+  with an invented migration is worse than one marked `[TBD]`.
+- NEVER mark a §17 Conflict Check row as coordinated unless the user confirms the conversation
+  with the other team actually happened.
+
+### §17 scope boundary — contract, never implementation
+
+§17 records *what the contract is*, never how it is built. In bounds: endpoints, request and
+response field names, data-model fields and types, storage locations, and how each one changes.
+Out of bounds: algorithms, class or module design, concurrency and threading, retry and caching
+mechanics, deployment, and infrastructure.
+
+**Write no code blocks in §17.** Every contract is a table row — no JSON, no Swift, no SQL, no
+pseudocode. When the user supplies implementation detail, capture the contract shape and redirect:
+"That's implementation — is there an engineering design doc I should link instead?" A detail that
+cannot be stated as a contract row does not belong in the PRD.
+
+### Screen naming (§9 Screens)
+
+The §9 Screens table is the single source of truth for the pages a user passes through.
+- An **existing** screen is recorded by its frontend class name exactly as it appears in the
+  codebase (e.g. `SwingReportViewController`, `ChatbotView`). Do not reformat or guess it — offer
+  to `Grep` for it, and write `[TBD — confirm class name]` if it cannot be confirmed.
+- A **new** screen is named during the interview, following the same convention (`XxxViewController`
+  for UIKit, `XxxView` for SwiftUI). A `New` row may NOT be left as `[TBD]` — propose a name from
+  the screen's purpose and get confirmation.
+- Every flowchart node that represents a screen uses the table's name verbatim.
 
 ### When the user is vague
 
@@ -257,6 +285,7 @@ Step 1 — Intake
   Run the full §0 Intake from prompts/interview-questions.md.
   Do NOT begin the section-by-section interview until all §0 questions are complete.
   Use §0 answers to determine which optional sections to include BEFORE proceeding to Step 2.
+  §0.4 Q12b decides §17 API & Data Contracts — any API, data-model, or storage change triggers it.
   Optional section decisions are final after intake — do not re-ask screening questions later.
 
   MANDATORY: If any compliance signal is confirmed in §0.3 (payments, eKYC, PII, regulated data,
@@ -283,7 +312,7 @@ Step 3 — Requirements Deep Dive
 Step 4 — Optional Sections
   Optional sections were determined at intake. Present the confirmed list to the user:
   "Based on what you told me, I'll include: [list]. Does that sound right?"
-  Generate each confirmed section in order: §13, §14, §15, §16.
+  Generate each confirmed section in order: §13, §14, §15, §16, §17.
   Do not re-run optional section screening — the decision was made at intake.
   If the user wants to add or remove a section, adjust accordingly.
 
@@ -336,6 +365,7 @@ Step 5 — Re-run validation on the updated section.
 | `prompts/section-rules.md` | Full rules for every section — used for validation | Modes 1, 2, 3 when validating |
 | `prompts/validation-rules.md` | Scoring rubric and validation report format | Modes 1, 2 (after writing/reading PRD) |
 | `prompts/diagram-rules.md` | Mermaid diagram spec (types, rules, examples) | When a diagram is offered (§8/§9/§11) or requested |
+| `prompts/interview-questions.md` §17 block | Contract interview — API, data model, storage, compatibility, conflicts | Mode 1 when §17 is triggered at §0.4 Q12b |
 | `templates/prd-template.md` | The blank PRD template | Mode 1 when assembling final output |
 | `templates/prd-summary-template.md` | One-page stakeholder summary template | When user requests a summary |
 | `scripts/validate.py` | Deterministic baseline validator (run via Bash) | Modes 1, 2 — before producing report |

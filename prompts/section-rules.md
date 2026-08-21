@@ -129,11 +129,16 @@ A violation blocks progression to the next section. Warnings are noted but do no
 - No user story coverage map is present
 - No considered alternatives section is present
 - An alternative is listed as rejected but no reason is given
+- A Screens row is missing its class name, or a row marked `New` has a `[TBD]` class name
 
 **WARNINGS:**
 - A design artifact link is present but marked as Draft (flag for reviewer attention)
 - One or more user stories from §8 are not covered in the coverage map
 - A technical constraint attributed to a third-party API cites no vendor-doc source
+- The Screens table is absent while the initiative touches a user-facing surface
+- A Screens class name does not follow the codebase convention (`XxxViewController` / `XxxView`)
+- A Screens row has no `Stories` value, so the screen traces to no requirement
+- A flowchart node names a screen that has no Screens-table row, or names it differently
 
 ---
 
@@ -234,6 +239,29 @@ A violation blocks progression to the next section. Warnings are noted but do no
 - Communication cadence is absent for one or more stakeholders
 - External stakeholders are not distinguished from internal ones
 - A Consulted (C) stakeholder appears to be receiving only Informed (I) treatment based on context
+
+---
+
+## §17 — API & Data Contracts (Optional)
+
+**VIOLATIONS (block):**
+- A code block appears anywhere in the section (contracts are tables only)
+- Implementation detail is described rather than the contract — algorithms, class or module
+  design, concurrency, retry or caching mechanics, deployment, infrastructure
+- A row is missing its `Change` value (`New` / `Modified` / `Removed`)
+- An endpoint path, model name, field name, or table name was invented rather than confirmed
+- A change marked breaking has no migration path, or no named owner
+- A contract another team owns or consumes has no Conflict Check row
+- PRD is marked Approved while any Conflict Check row is still `[TBD — not yet raised]`
+- A new API, model, or table is introduced but does not appear in §14 Dependencies
+
+**WARNINGS:**
+- The Backward Compatibility table is absent while `Modified` or `Removed` rows exist
+- A `Removed` contract has no retirement date
+- A data model field has no type, or no description of what it holds
+- A remote storage change needs a backfill and the Notes column does not say so
+- An API row lists no consumers, so the blast radius of the change is unknown
+- The section links no engineering design doc while stating that detail lives elsewhere
 
 ---
 

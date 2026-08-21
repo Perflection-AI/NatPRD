@@ -8,25 +8,45 @@ You talk, it asks smart questions, and a complete, well-structured document come
 
 ## Contents
 
-- [What is this, in plain words?](#what-is-this-in-plain-words)
-- [Who is it for?](#who-is-it-for)
-- [Why people use it](#why-people-use-it)
-- [How it works](#how-it-works)
-- [A quick example](#a-quick-example)
-- [Installation](#installation)
-- [How to use it](#how-to-use-it)
-- [What's inside a PRD](#whats-inside-a-prd)
-- [Diagrams](#diagrams)
-- [Smart research features](#smart-research-features)
-- [The honesty guarantee](#the-honesty-guarantee)
-- [Quality score](#quality-score)
-- [Where your files go](#where-your-files-go)
-- [Does it use the internet?](#does-it-use-the-internet)
-- [For the technically curious](#for-the-technically-curious)
-- [Customize it for your team](#customize-it-for-your-team)
-- [Glossary](#glossary)
-- [FAQ](#faq)
-- [License](#license)
+- [PRD Maker](#prd-maker)
+  - [Contents](#contents)
+  - [What is this, in plain words?](#what-is-this-in-plain-words)
+  - [Who is it for?](#who-is-it-for)
+  - [Why people use it](#why-people-use-it)
+  - [How it works](#how-it-works)
+  - [A quick example](#a-quick-example)
+  - [Installation](#installation)
+    - [What you need](#what-you-need)
+    - [Option 1: Claude Code (recommended; it saves the PRD straight into your project)](#option-1-claude-code-recommended-it-saves-the-prd-straight-into-your-project)
+    - [Option 2: Claude app (claude.ai and desktop)](#option-2-claude-app-claudeai-and-desktop)
+  - [How to use it](#how-to-use-it)
+  - [What's inside a PRD](#whats-inside-a-prd)
+    - [Core sections (always)](#core-sections-always)
+    - [Optional sections (only when relevant)](#optional-sections-only-when-relevant)
+  - [Diagrams](#diagrams)
+  - [Smart research features](#smart-research-features)
+    - [1. Regulation look-up](#1-regulation-look-up)
+    - [2. Benchmarks](#2-benchmarks)
+    - [3. Reading API / vendor docs](#3-reading-api--vendor-docs)
+    - [4. Citations](#4-citations)
+  - [The honesty guarantee](#the-honesty-guarantee)
+  - [Quality score](#quality-score)
+  - [Where your files go](#where-your-files-go)
+  - [Does it use the internet?](#does-it-use-the-internet)
+  - [For the technically curious](#for-the-technically-curious)
+    - [File structure](#file-structure)
+    - [Run the checks yourself](#run-the-checks-yourself)
+    - [How the score is split](#how-the-score-is-split)
+  - [Customize it for your team](#customize-it-for-your-team)
+    - [The no-edit route: just ask Claude](#the-no-edit-route-just-ask-claude)
+    - [Step 1: Fork the repo (make your own copy)](#step-1-fork-the-repo-make-your-own-copy)
+    - [Step 2: Change what you need](#step-2-change-what-you-need)
+    - [Customization recipes (by workflow)](#customization-recipes-by-workflow)
+    - [Keep the four "scoring" files in sync](#keep-the-four-scoring-files-in-sync)
+    - [Pull in future updates (optional)](#pull-in-future-updates-optional)
+  - [Glossary](#glossary)
+  - [FAQ](#faq)
+  - [License](#license)
 
 ---
 
@@ -196,7 +216,7 @@ In Claude Code you can also invoke it directly by typing `/natprd`.
 
 ## What's inside a PRD
 
-Every PRD has **12 core sections** (always included) and up to **4 optional sections** (added only when they're relevant; for example, the Risks section appears automatically when sensitive data is involved).
+Every PRD has **12 core sections** (always included) and up to **5 optional sections** (added only when they're relevant; for example, the Risks section appears automatically when sensitive data is involved).
 
 ### Core sections (always)
 
@@ -210,7 +230,7 @@ Every PRD has **12 core sections** (always included) and up to **4 optional sect
 | 6 | Hypothesis | Your bet, written so it can be proven right *or* wrong |
 | 7 | Success Metrics | The numbers that tell you it worked (and the ones that must not get worse) |
 | 8 | Requirements | Each need written as a "user story" with testable pass/fail conditions |
-| 9 | Solution | How it works for the user, with links to designs and the alternatives you rejected |
+| 9 | Solution | How it works for the user: the screens they pass through, links to designs, and the alternatives you rejected |
 | 10 | Metric Monitoring | Who watches the dashboards after launch, and when to pull the plug |
 | 11 | Event & Data Tracking | Exactly what gets measured, so the metrics in §7 actually have data |
 | 12 | FAQ | Questions people have asked, with answers and owners for the open ones |
@@ -223,6 +243,7 @@ Every PRD has **12 core sections** (always included) and up to **4 optional sect
 | 14 | Dependencies | You rely on another team or an outside vendor |
 | 15 | Launch Plan | The rollout is staged, phased, or needs sign-offs |
 | 16 | Stakeholder Map | Several teams or external parties need to be kept in the loop |
+| 17 | API & Data Contracts | An API, a data model, or where data is stored changes |
 
 ---
 

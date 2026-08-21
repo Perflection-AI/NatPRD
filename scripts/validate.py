@@ -84,6 +84,21 @@ DIAGRAM_PLACEHOLDER = re.compile(
     re.IGNORECASE,
 )
 
+# §9 Screens: frontend class names follow the codebase convention — UIKit controllers end in
+# `ViewController`, SwiftUI screens end in `View`.
+SCREEN_CLASS_PATTERN = re.compile(r"^[A-Z][A-Za-z0-9]*(ViewController|View)$")
+# §17 contracts are tables only. Anchored to line start so inline-code prose is not matched.
+CODE_FENCE = re.compile(r"^```", re.MULTILINE)
+# Every §17 row states how the contract changes.
+CHANGE_VALUES = {"new", "modified", "removed"}
+CONFLICT_UNRAISED = "not yet raised"
+# Template cells that still list their own choices, e.g. `New` / `Modified` / `Removed` or
+# `Yes` / `No`. They read as content to field_state but mean "not filled in yet".
+TEMPLATE_OPTION_TOKENS = {
+    "new", "modified", "removed", "unchanged", "yes", "no", "existing",
+    "not retired", "none", "confirmed compatible", "coordinating",
+}
+
 
 def split_sections(content: str) -> Dict[str, str]:
     """Split the PRD by top-level numbered H2 headings."""
@@ -158,6 +173,24 @@ def field_state(value: str) -> str:
 
 def is_filled(value: str) -> bool:
     return field_state(value) == "filled"
+
+
+def is_option_list(value: str) -> bool:
+    """True when a cell still holds the template's own choice list rather than a
+    choice, e.g. "`New` / `Modified` / `Removed`". Two or more slash-separated
+    segments, every one of them a bare option token."""
+    v = value.strip()
+    if "/" not in v:
+        return False
+    parts = [p.strip().strip("`").strip() for p in v.split("/")]
+    parts = [p for p in parts if p]
+    return len(parts) >= 2 and all(p.lower() in TEMPLATE_OPTION_TOKENS for p in parts)
+
+
+def cell_state(value: str) -> str:
+    """field_state, plus: an untouched choice list counts as empty. Used by the
+    cross-cutting checkers so a blank template does not read as filled-in content."""
+    return "empty" if is_option_list(value) else field_state(value)
 
 
 def deduct_unfilled(
@@ -756,6 +789,119 @@ def check_diagrams(content: str) -> List[str]:
     return warnings
 
 
+def check_screens(sections: Dict[str, str]) -> Tuple[List[str], List[str]]:
+    """Cross-cutting (not scored): the §9 Screens table names the pages a user passes
+    through. Existing screens carry their real frontend class name; a screen marked New
+    must be named here rather than deferred. Whether an Existing name actually matches
+    the codebase stays with the model."""
+    violations: List[str] = []
+    warnings: List[str] = []
+    s9 = sections.get("§9", "")
+    if not s9:
+        return violations, warnings
+    rows = [r for r in parse_tables(s9) if "Screen" in r and "Class" in r]
+    for row in rows:
+        screen_state = cell_state(row.get("Screen", ""))
+        cls = row.get("Class", "").strip("`").strip()
+        cls_state = cell_state(cls)
+        if screen_state != "filled" and cls_state != "filled":
+            continue  # unfilled template row
+        sid = row.get("#") or row.get("Screen") or "<row>"
+        status_raw = row.get("Status", "")
+        status = "" if is_option_list(status_raw) else status_raw.strip("`").strip().lower()
+        is_new = "new" in status
+        if cls_state == "empty":
+            violations.append(f"§9: Screens row {sid} has no class name")
+        elif cls_state == "tbd" and is_new:
+            violations.append(
+                f"§9: Screens row {sid} is marked New but its class name is [TBD] — name it here"
+            )
+        elif cls_state == "tbd":
+            warnings.append(f"§9: Screens row {sid} class name is [TBD]")
+        elif not SCREEN_CLASS_PATTERN.match(cls):
+            warnings.append(
+                f"§9: Screens row {sid} class '{cls}' does not follow the "
+                f"XxxViewController / XxxView convention"
+            )
+        if cell_state(row.get("Stories", "")) != "filled":
+            warnings.append(f"§9: Screens row {sid} traces to no user story")
+    return violations, warnings
+
+
+def check_contracts(sections: Dict[str, str]) -> Tuple[List[str], List[str]]:
+    """Cross-cutting (not scored, blocks Approved): §17 records contracts as tables only.
+    Checks the boundary mechanically — no code blocks, every row states how it changes,
+    breaking changes carry a migration path and an owner, and no conflict is left unraised.
+    Whether a row has drifted from contract into implementation detail stays with the model."""
+    violations: List[str] = []
+    warnings: List[str] = []
+    s17 = sections.get("§17", "")
+    if not s17:
+        return violations, warnings
+    if CODE_FENCE.search(s17):
+        violations.append(
+            "§17: Section contains a code block — contracts are expressed as tables only"
+        )
+    rows = parse_tables(s17)
+    change_rows = [r for r in rows if "Change" in r]
+    for row in change_rows:
+        subject = (
+            row.get("Endpoint") or row.get("Model") or row.get("Location")
+            or row.get("Table") or row.get("ID") or "<row>"
+        )
+        identity_state = cell_state(subject)
+        change = row.get("Change", "").strip("`").strip()
+        change_state = cell_state(change)
+        if identity_state != "filled" and change_state != "filled":
+            continue  # unfilled template row
+        rid = row.get("ID") or subject
+        if change_state != "filled":
+            violations.append(f"§17: Row {rid} does not state its Change (New / Modified / Removed)")
+        elif not any(v in change.lower() for v in CHANGE_VALUES):
+            violations.append(
+                f"§17: Row {rid} Change value '{change}' is not New, Modified, or Removed"
+            )
+        elif "removed" in change.lower() and "Notes" in row:
+            if cell_state(row.get("Notes", "")) != "filled":
+                warnings.append(f"§17: Removed contract {rid} has no note on retirement or migration")
+
+    compat_rows = [r for r in rows if "Breaking?" in r]
+    has_change = any(
+        cell_state(r.get("Change", "")) == "filled"
+        and any(v in r.get("Change", "").lower() for v in ("modified", "removed"))
+        for r in change_rows
+    )
+    real_compat = [r for r in compat_rows if cell_state(r.get("Contract", "")) == "filled"]
+    if has_change and not real_compat:
+        warnings.append(
+            "§17: Modified or Removed contracts exist but the Backward Compatibility table is empty"
+        )
+    for row in real_compat:
+        cid = row.get("Contract", "<row>")
+        breaking = row.get("Breaking?", "")
+        if is_option_list(breaking) or "yes" not in breaking.strip("`").strip().lower():
+            continue
+        if cell_state(row.get("Migration Path", "")) != "filled":
+            violations.append(f"§17: Breaking change {cid} has no migration path")
+        if cell_state(row.get("Owner", "")) != "filled":
+            violations.append(f"§17: Breaking change {cid} has no named owner")
+
+    for row in [r for r in rows if "Coordination Status" in r]:
+        if cell_state(row.get("Contract", "")) != "filled":
+            continue
+        status = row.get("Coordination Status", "")
+        if CONFLICT_UNRAISED in status.lower():
+            violations.append(
+                f"§17: Conflict check for {row.get('Contract')} is still unraised — "
+                f"blocks Approved"
+            )
+        elif cell_state(status) != "filled":
+            warnings.append(
+                f"§17: Conflict check for {row.get('Contract')} has no coordination status"
+            )
+    return violations, warnings
+
+
 CHECKERS = {
     "§1": check_section_1,
     "§2": check_section_2,
@@ -816,15 +962,25 @@ def validate(path: Path) -> Dict[str, Any]:
     citation_warnings = check_citations(content)
     compliance_violations, compliance_warnings = check_compliance(sections)
     diagram_warnings = check_diagrams(content)
+    screen_violations, screen_warnings = check_screens(sections)
+    contract_violations, contract_warnings = check_contracts(sections)
     results["warnings"].extend(citation_warnings)
     results["warnings"].extend(compliance_warnings)
     results["warnings"].extend(diagram_warnings)
+    results["warnings"].extend(screen_warnings)
+    results["warnings"].extend(contract_warnings)
     results["violations"].extend(compliance_violations)
+    results["violations"].extend(screen_violations)
+    results["violations"].extend(contract_violations)
     results["cross_checks"] = {
         "citation_warnings": citation_warnings,
         "compliance_violations": compliance_violations,
         "compliance_warnings": compliance_warnings,
         "diagram_warnings": diagram_warnings,
+        "screen_violations": screen_violations,
+        "screen_warnings": screen_warnings,
+        "contract_violations": contract_violations,
+        "contract_warnings": contract_warnings,
     }
     results["score"] = total
     results["max_score"] = sum(SECTION_MAX.values())

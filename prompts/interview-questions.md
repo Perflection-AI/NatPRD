@@ -119,6 +119,18 @@ RULE: If a compliance signal was confirmed in §0.3, this step is mandatory. It 
 12. Does this require executive or leadership sign-off before launch?
     - _If yes:_ Auto-flag §16 Stakeholder Map.
 
+12b. Does this initiative add or change any of the following?
+    - An API endpoint (new, changed, or removed)
+    - A data model or its fields
+    - Where data is stored — a local file structure, or a remote table
+    - _If any are confirmed:_ Auto-flag §17 API & Data Contracts.
+    - _Follow-up if yes:_ "Does another team or service also own or consume any of these? I'll
+      record each one in the §17 Conflict Check so two initiatives don't change the same shape in
+      incompatible ways."
+    - _If the user starts describing implementation:_ §17 records the contract only — what the
+      endpoint or field is and how it changes. Redirect: "That's implementation — for the PRD I
+      just need the shape and what changes. Is there an engineering design doc I can link instead?"
+
 ---
 
 ### §0.5 — Launch and Rollout Context
@@ -159,6 +171,7 @@ After completing §0.3–§0.5, apply the trigger logic below and present a summ
 > - §14 Dependencies: [Yes — reason / No]
 > - §15 Launch Plan: [Yes — reason / No]
 > - §16 Stakeholder Map: [Yes — reason / No]
+> - §17 API & Data Contracts: [Yes — reason / No]
 >
 > Does this look right? You can add or remove any of these before we start."
 
@@ -181,6 +194,9 @@ Wait for confirmation. Do not proceed to §1 until the user confirms or adjusts 
 | 3+ teams involved | §16 Stakeholder Map |
 | Executive or leadership sign-off required | §16 Stakeholder Map |
 | External regulators, partners, or vendors with sign-off authority | §16 Stakeholder Map |
+| An API endpoint is added, changed, or removed | §17 API & Data Contracts |
+| A data model or any of its fields changes | §17 API & Data Contracts |
+| Local file structure or a remote table changes | §17 API & Data Contracts |
 
 Any single signal is sufficient to trigger the section.
 
@@ -374,6 +390,23 @@ not contain. Skip the offer when the story is a single straight-line scenario wi
    - _If no links yet:_ "I'll write `[No design link — status: Draft]` for now. This section requires a link to pass validation. When will designs be available, and who is the designer?"
    - RULE: Do not describe the design or UI in prose if no link exists. Use: `[Design pending — link to be added]`. Never generate a design description that implies decisions have been made when no link supports it.
 
+2b. Let's list the screens a user passes through in this flow, in order. For each one:
+   a. **Name:** What do you call this screen?
+   b. **Existing or new?**
+   c. _If existing:_ "What's its class in the codebase?" — record the class name exactly as it
+      appears (e.g. `SwingReportViewController`, `ChatbotView`). Do not guess or reformat it.
+      - _If the user doesn't remember:_ offer to `Grep` the codebase for it. If it still can't be
+        confirmed, write `[TBD — confirm class name]` and flag it.
+   d. _If new:_ "What should we call it?" — the name is decided here, following the same
+      convention (`XxxViewController` for UIKit, `XxxView` for SwiftUI).
+      - RULE: A new screen may NOT be left as `[TBD]`. Naming it is the point of the row. If the
+        user has no name, propose one from the screen's purpose and get confirmation.
+   e. **Purpose:** What does the user do here?
+   f. **Stories:** Which user stories from §8 pass through this screen?
+
+   These names become the vocabulary for every flowchart in §8 and §9 — a node that represents a
+   screen uses the table's name verbatim, so the diagram and the table can never drift apart.
+
 3. For each user story we captured, which part of the solution addresses it?
 
 4. What alternatives were considered and why were they rejected?
@@ -504,3 +537,64 @@ For each confirmed regulation from §0.3b, ask:
 
 **Closing check:**
 > "We've covered: [list of regulations identified]. Does legal or compliance need to formally review this section before the PRD moves to In Review? If so, I'll add that as an open item in §12."
+
+---
+
+## §17 — API & Data Contracts *(optional — only when flagged at §0.4 Q12b)*
+
+**Scope guard — state this before asking anything else:**
+
+> "This section records the contract only: which endpoints change, which fields change, where the
+> data lives, and whether anything breaks. It does not cover how it's built — no algorithms, no
+> class design, no threading or caching, no deployment. Everything goes in a table; there are no
+> code blocks in this section. If a detail doesn't fit a table row, we link an engineering design
+> doc instead."
+
+Redirect whenever the user drifts into implementation: "That's implementation detail — for the
+PRD I need the shape and the change. Is there a design doc I should link?"
+
+**API Changes:**
+1. Which endpoints does this add, change, or remove? For each: path and method.
+   - RULE: Never invent an endpoint path. If the user hasn't decided, write `[TBD]`.
+2. For each endpoint — is it `New`, `Modified`, or `Removed`?
+3. Which request fields and response fields are involved? (names only — types belong to the data
+   model table)
+4. Who calls this endpoint today, or who will? (iOS app, web, another service, a partner)
+   - _If the user doesn't know:_ "Without the consumer list we can't size the blast radius of the
+     change. Who would know?" Write `[TBD]` and flag it.
+5. Who owns this endpoint?
+
+**Data Model Changes:**
+6. Which models or their fields change? For each field: name, type, required or optional, and
+   whether it is `New`, `Modified`, or `Removed`.
+7. What does each new or changed field hold, and why did it change?
+   - RULE: Never invent a model name or a field name. Unknown → `[TBD]`.
+
+**Storage Changes:**
+8. Does anything change in local storage — file structure, path layout, or an on-device JSON
+   model? For each: what changes, and does existing on-device data need migrating?
+9. Does anything change remotely — a table, a column, a type, an index? For each: what changes,
+   and is a backfill needed?
+
+**Backward Compatibility:**
+10. For each `Modified` or `Removed` contract: does this break any existing consumer?
+    - _If yes:_ "Who breaks — which client version, team, or service? How do they move over, and
+      who owns getting them there?"
+    - RULE: A breaking change needs a named migration path and a named owner. Both are violations
+      if absent — do not write a plausible-sounding migration.
+11. When is the old contract retired? (date, or `Not retired`)
+
+**Conflict Check:**
+12. For each contract listed above — does another team, service, or initiative also own or
+    consume it?
+    - _If yes:_ "Do they have a change in flight on the same contract? Have we raised this with
+      them yet?" Record the coordination status.
+    - RULE: A contract another team touches, left at `[TBD — not yet raised]`, blocks `Approved`.
+      Do not mark it coordinated unless the user confirms the conversation happened.
+13. Are any of these contracts new to the organisation?
+    - _If yes:_ "Then they're a dependency for whoever consumes them — I'll mirror them into
+      §14." If §14 is not already triggered, recommend adding it.
+
+**Closing cross-check:**
+> "Every row here needs a Change value, every breaking change needs a migration owner, and every
+> contract someone else touches needs a conflict row. Let's confirm we have all three."

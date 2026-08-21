@@ -72,6 +72,11 @@ facts:
   (left-right) for flows, `sequenceDiagram` for sequences.
 - Draw node, actor, and message labels from the confirmed terms. Use the user's wording, not a
   paraphrase.
+- **A node that represents a screen uses the name from the §9 Screens table, verbatim.** Never a
+  paraphrase, never a class name where the table gives a human-readable name, and never a screen
+  that has no row in that table. The table is the single source of truth for page names, so the
+  diagram and the table cannot drift apart. If a flow passes through a screen the table does not
+  list, add the row first — do not invent the page in the diagram.
 - Keep diagrams **unstyled and readable**: no `classDef`, no theme directives, no color or CSS.
   Portability and reviewability come first.
 - One concept per diagram. If a flow has two distinct sub-flows, offer two diagrams rather than
@@ -143,6 +148,7 @@ not appear.
 
 - Do not invent a decision branch the scenarios do not contain.
 - Do not add a system, service, or destination the user never named.
+- Do not name a screen that has no row in the §9 Screens table, and do not rename one that does.
 - Do not draw a diagram for content that is a flat list with no flow or interaction.
 - Do not style, theme, or color diagrams.
 - Do not write a diagram before showing it and getting a yes.

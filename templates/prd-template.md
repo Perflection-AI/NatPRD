@@ -293,6 +293,18 @@ a design link.)*
 | Wireframes | [Link] | `Draft` / `Final` |
 | Mockups | [Link] | `Draft` / `Final` |
 
+### Screens
+
+> One row per screen the user passes through. Name existing screens by their frontend class
+> exactly as it appears in the codebase (e.g. `SwingReportViewController`, `ChatbotView`). Give
+> every new screen a name now, following the same convention — a new screen may not be left
+> `[TBD]`. These names are the vocabulary for every flowchart in §8 and §9.
+
+| # | Screen | Class | Status | Purpose | Stories |
+|---|---|---|---|---|---|
+| S1 | [Human-readable name] | `[XxxViewController / XxxView]` | `Existing` / `New` | [What the user does here] | US-001 |
+| S2 | [Human-readable name] | `[XxxViewController / XxxView]` | `Existing` / `New` | [What the user does here] | US-002 |
+
 ### User Story Coverage Map
 
 | User Story | Solution Component | Design Reference |
@@ -314,6 +326,10 @@ a design link.)*
 - Design links required.
 - All user stories must appear in coverage map.
 - Alternatives section is mandatory — always include at least one.
+- Every screen in the Screens table names a frontend class. Existing screens use the class name
+  as it appears in the codebase; new screens are given a name following the same convention.
+- A screen marked `New` may not have a `[TBD]` class name — naming it is the point of the row.
+- Flowchart nodes in §8 and §9 that represent a screen use the Screens-table name verbatim.
 
 ---
 
@@ -528,6 +544,69 @@ no actor, hop, or destination the row does not contain. See `prompts/diagram-rul
 - Named individuals, not roles.
 - Comms cadence + channel for every stakeholder.
 - External parties clearly labeled.
+
+---
+
+## 17. API & Data Contracts
+*(Include when: this initiative adds or changes an API, a data model, or where data is stored)*
+
+> **Scope boundary — read before writing this section.**
+> This section records *what the contract is*: which endpoints change, which fields change, where
+> data lives, and whether the change breaks existing consumers. It does **not** record how any of
+> it is implemented. Out of bounds: algorithms, class or module design, concurrency and threading,
+> retry and caching mechanics, deployment, and infrastructure.
+> **No code blocks.** Every contract is expressed as a table row. If a detail cannot be stated as
+> a contract row, it belongs in an engineering design doc — link that doc instead.
+
+### API Changes
+
+| ID | Endpoint | Method | Change | Request Fields | Response Fields | Consumers | Owner |
+|---|---|---|---|---|---|---|---|
+| API-001 | `[/path/to/resource]` | `GET` / `POST` / `PATCH` / `DELETE` | `New` / `Modified` / `Removed` | [Field names, or `—`] | [Field names, or `—`] | [Who calls it] | [Name] |
+
+### Data Model Changes
+
+| Model | Field | Type | Required | Change | Description |
+|---|---|---|---|---|---|
+| `[ModelName]` | `[fieldName]` | [String / Int / Bool / Date / Array / Object / Enum] | Yes / No | `New` / `Modified` / `Removed` | [What it holds and why it changed] |
+
+### Storage Changes
+
+**Local**
+
+| Location | What Changes | Change | Notes |
+|---|---|---|---|
+| `[path or file name]` | [Structure or field affected] | `New` / `Modified` / `Removed` | [Migration of existing on-device data, or `None`] |
+
+**Remote**
+
+| Table | Column | Type | Change | Notes |
+|---|---|---|---|---|
+| `[table_name]` | `[column_name]` | [Type] | `New` / `Modified` / `Removed` | [Index, constraint, or backfill needed] |
+
+### Backward Compatibility
+
+| Contract | Breaking? | Who Breaks | Migration Path | Old Contract Retired | Owner |
+|---|---|---|---|---|---|
+| [API-001 / Model / Table] | Yes / No | [Client version, team, or service affected] | [How existing consumers move over] | [Date or `Not retired`] | [Name] |
+
+### Conflict Check
+
+> One row per contract that another team, service, or initiative also owns or consumes. This is
+> how §17 prevents two initiatives from changing the same shape in incompatible ways.
+
+| Contract | Also Owned or Consumed By | Their Change in Flight? | Coordination Status | Owner |
+|---|---|---|---|---|
+| [API-001 / Model / Table] | [Team, service, or initiative] | Yes / No / `[TBD]` | `Confirmed compatible` / `Coordinating` / `[TBD — not yet raised]` | [Name] |
+
+### Rules
+- Contract-level only. No implementation detail, no code blocks — tables are the only format.
+- Every row states a `Change` value: `New`, `Modified`, or `Removed`. An unchanged contract does
+  not belong in this section.
+- Never invent an endpoint path, model name, field name, or table name. Unknown → `[TBD]`.
+- Every breaking change needs a named migration path and a named owner.
+- Every contract another team owns or consumes needs a Conflict Check row before `Approved`.
+- Contracts that are new to the organisation are dependencies for someone — mirror them in §14.
 
 ---
 
