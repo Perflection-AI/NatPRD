@@ -598,3 +598,28 @@ PRD I need the shape and the change. Is there a design doc I should link?"
 **Closing cross-check:**
 > "Every row here needs a Change value, every breaking change needs a migration owner, and every
 > contract someone else touches needs a conflict row. Let's confirm we have all three."
+
+---
+
+## Preseed intake (ask once, at the start)
+
+1. How many people are on the team, and when do you want this live?
+
+If the answer is roughly under ten people and weeks rather than quarters, put
+`Mode: preseed` in the Document Status table and skip the ceremony questions:
+reviewers, approvers, approval date, benchmarks, OKR alignment, confidence
+level, post-launch learning plan, per-metric owners and timelines, escalation
+path, review schedule, and data-team sign-off.
+
+Ask these instead:
+
+2. How do you turn this off if it goes wrong, and what condition triggers that?
+3. What must not get worse while this ships? (guardrail)
+4. When do you judge each target - which are read in the first weeks, and which
+   need a longer window?
+5. Is this a holdout/A-B or a before-after comparison? (If undecided, record it
+   as `[TBD]` with both options and their trade-offs.)
+6. Roughly how many users enter this flow per week? Use it to sanity-check every
+   rate target before writing it down - a target smaller than what that traffic
+   can detect is unfalsifiable, and should be written as a direction, not a
+   number.

@@ -31,7 +31,8 @@ You talk, it asks smart questions, and a complete, well-structured document come
     - [4. Citations](#4-citations)
   - [The honesty guarantee](#the-honesty-guarantee)
   - [Quality score](#quality-score)
-  - [Where your files go](#where-your-files-go)
+  - [Preseed mode](#preseed-mode)
+- [Where your files go](#where-your-files-go)
   - [Does it use the internet?](#does-it-use-the-internet)
   - [For the technically curious](#for-the-technically-curious)
     - [File structure](#file-structure)
@@ -328,6 +329,40 @@ When the document is done (or when you ask it to review one), PRD Maker scores i
 The report separates hard problems (**violations**: things that must be fixed) from softer ones (**warnings**: things you should look at), and lists exactly where each one is.
 
 ---
+
+## Preseed mode
+
+The default rubric assumes a company with a review chain, an OKR tree, a metrics
+duty roster and a data team. A team of fewer than ten people shipping in weeks has
+none of those, so scoring them as gaps makes the number meaningless: a deliberately
+lean PRD comes back "Not Ready" for missing paperwork nobody was ever going to write.
+
+Turn preseed mode on by adding one row to the Document Status table:
+
+| Field | Detail |
+|---|---|
+| **Mode** | `preseed` |
+
+or by passing `--preseed` to the validator.
+
+**What it stops asking for:** named reviewers and approvers, approval date,
+benchmarks, company OKR alignment, confidence level, post-launch learning plan,
+per-metric owners and timelines, the user story coverage map, escalation path,
+review schedule, monitoring cadence, and data team sign-off.
+
+**What it starts insisting on** — the things that actually hurt a small team:
+
+- a **rollback trigger** you can pull without shipping a release;
+- at least one **guardrail** stating what must not get worse;
+- a **decision window** on every target, so nobody reads two weeks of noise as a result;
+- a stated **validation approach** (holdout, before-after, or an explicit `[TBD]`);
+- a **sample-size reality check** whenever a retention / conversion / activation
+  target is set — at low traffic a target below the detectable difference cannot
+  be proven or disproven, and should be written as a direction rather than a number.
+
+Everything else is unchanged: evidence, scope, product rules, two scenarios per
+requirement, contracts, and the honesty guarantee. Preseed mode removes
+bureaucracy, not rigour.
 
 ## Where your files go
 

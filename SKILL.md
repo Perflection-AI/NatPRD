@@ -379,3 +379,20 @@ See [README.md](README.md) for installation, the full feature list, and the FAQ.
 
 ## License
 BSD 3-Clause — free to use and redistribute, with attribution. Do not use the author's name to endorse derived works.
+
+## Preseed mode
+
+If the team is roughly under ten people and the target is weeks rather than
+quarters, write `Mode: preseed` into the Document Status table and follow the
+preseed rubric in `prompts/validation-rules.md`. Skip the ceremony questions
+(reviewers, approvers, OKR alignment, owners per metric, escalation, review
+schedule, data sign-off) and ask the preseed intake questions in
+`prompts/interview-questions.md` instead: how you turn it off, what must not get
+worse, when each target is judged, holdout or before-after, and how much weekly
+traffic the flow gets. Use that traffic number to sanity-check every rate target
+before writing it down.
+
+Write all preseed-mode prose in the lean style documented in
+`references/lean-style.md` - contracts (tables, rules, Gherkin, [TBD], sources)
+stay intact; narrative gets one idea per sentence, claim -> evidence ->
+consequence in three lines or fewer.

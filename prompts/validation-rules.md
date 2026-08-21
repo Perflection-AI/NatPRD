@@ -147,3 +147,39 @@ approval date is still a **violation**, because the status asserts those fields 
   unsourced step, branch, actor, or destination — the derive-from-confirmed-content rule in
   `prompts/diagram-rules.md`. A diagram that asserts something the prose does not is a violation of
   that rule even when the syntax is clean.
+
+---
+
+## Preseed mode
+
+For teams under about ten people shipping in weeks, the default rubric scores
+ceremony they cannot staff, so the number stops carrying information. Preseed
+mode is switched on with `--preseed` on the validator, or by a `Mode` row set
+to `preseed` in the section 2 Document Status table.
+
+**Waived** (the finding is dropped and its points refunded):
+
+| Section | Waived requirement | Why |
+|---|---|---|
+| 2 | Named reviewers, approvers, approval date | No review chain; the owner approves |
+| 3 | Benchmarks | No budget for industry benchmark data |
+| 4 | Company OKR alignment | No OKR tree yet |
+| 6 | Confidence level, post-launch learning plan | Ceremony fields |
+| 7 | Per-metric owner and timeline column | Everyone owns everything |
+| 9 | User story coverage map | The stories already name their components |
+| 10 | Escalation path, review schedule, cadence | The whole team is one room |
+| 11 | Data team sign-off | There is no separate data team |
+
+**Enforced instead** (these matter more, not less, at this size):
+
+| Check | Level | Rationale |
+|---|---|---|
+| A rollback trigger exists somewhere in the doc | Violation | A small team must be able to switch the feature off without a release |
+| Section 7 names at least one guardrail | Violation | Something has to state what must not get worse |
+| Targets carry a decision window | Warning | Otherwise the team reads noise at day 18 and calls it a result |
+| Validation approach stated (holdout / before-after) or explicitly `[TBD]` | Warning | Deciding this after launch makes the data unreadable |
+| A rate target (retention / conversion / activation) is paired with a sample-size or detectability note | Warning | At low traffic a target below the detectable difference is unfalsifiable |
+
+Everything else - evidence, scope, product rules, requirements with two
+scenarios each, contracts, edge cases, the honesty guarantee - is unchanged.
+Preseed mode removes bureaucracy, not rigour.

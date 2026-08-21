@@ -32,6 +32,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+SECTION_KEY_FMT = "\u00a7%d"
+
 SECTION_MAX = {
     "§1": 3, "§2": 5, "§3": 10, "§4": 10, "§5": 8, "§6": 8,
     "§7": 10, "§8": 20, "§9": 8, "§10": 5, "§11": 8, "§12": 5,
@@ -918,9 +920,143 @@ CHECKERS = {
 }
 
 
-def validate(path: Path) -> Dict[str, Any]:
+# ---------------------------------------------------------------------------
+# Preseed mode
+# ---------------------------------------------------------------------------
+# A team under ten people shipping in weeks cannot staff a review chain, a
+# metrics duty roster, or a separate data-team sign-off. Scoring those as gaps
+# makes the number lie: a deliberately lean doc reads as unfinished. Preseed
+# mode waives that ceremony and, in exchange, enforces what actually bites a
+# small team - a rollback you can pull, a guardrail you can read, a decision
+# window on every target, and an honest check that the traffic can support the
+# target at all.
+#
+# Enable with --preseed, or with a `Mode` row set to `preseed` in the
+# section 2 Document Status table.
+
+PRESEED_MODE_PATTERN = re.compile(
+    r"^\s*\|?\s*\**Mode\**\s*\|\s*`?preseed`?", re.IGNORECASE | re.MULTILINE
+)
+
+# (section, message pattern, points refunded, why it is waived)
+PRESEED_EXEMPTIONS = [
+    ("2", re.compile(r"[Rr]eviewer"), 2, "no review chain at this size"),
+    ("2", re.compile(r"[Aa]pprover"), 2, "owner is the approver"),
+    ("2", re.compile(r"[Aa]pproval [Dd]ate"), 1, "no formal approval gate"),
+    ("3", re.compile(r"[Bb]enchmark"), 1, "no industry benchmark budget"),
+    ("4", re.compile(r"OKR"), 2, "no company OKR tree yet"),
+    ("6", re.compile(r"[Cc]onfidence"), 1, "ceremony field"),
+    ("6", re.compile(r"[Ll]earning [Pp]lan"), 1, "covered by the review window"),
+    ("7", re.compile(r"[Oo]wner"), 1, "everyone owns everything at this size"),
+    ("7", re.compile(r"[Tt]imeline"), 1, "decision window is checked instead"),
+    ("9", re.compile(r"[Cc]overage [Mm]ap"), 2, "user stories already name components"),
+    ("10", re.compile(r"[Ee]scalation"), 1, "the whole team is one room"),
+    ("10", re.compile(r"[Rr]eview (date|schedule)"), 1, "no standing review calendar"),
+    ("10", re.compile(r"[Cc]adence"), 1, "folded into the monitoring block"),
+    ("11", re.compile(r"sign-?off"), 2, "no separate data team"),
+]
+
+WINDOW_PATTERN = re.compile(
+    r"\b\d+\s*(?:-|\u2013|to)?\s*\d*\s*(?:day|days|week|weeks|month|months)\b"
+    r"|\d+\s*[-\u2013]?\s*\d*\s*(?:\u5929|\u5468|\u4e2a\u6708)"
+)
+ROLLBACK_PATTERN = re.compile(
+    r"[Rr]ollback|[Rr]oll back|\u56de\u6eda|kill switch", re.IGNORECASE
+)
+GUARDRAIL_PATTERN = re.compile(r"[Gg]uardrail|\u62a4\u680f")
+VALIDATION_PATTERN = re.compile(
+    r"holdout|hold-out|[Aa]/[Bb]|control group|\u5bf9\u7167\u7ec4|\u7070\u5ea6"
+    r"|\u524d\u540e\u5bf9\u6bd4|before[- ]after"
+)
+POWER_PATTERN = re.compile(
+    r"sample size|statistical power|detectable|MDE|\u6837\u672c\u91cf|\u53ef\u68c0\u51fa"
+    r"|\u7edf\u8ba1\u663e\u8457|per arm|\u6bcf\u7ec4"
+)
+RATE_TARGET_PATTERN = re.compile(
+    r"retention|\u7559\u5b58|conversion|\u8f6c\u5316|activation|\u6fc0\u6d3b"
+)
+
+
+def preseed_extra_checks(content, sections):
+    """Checks that matter more, not less, when the team is tiny."""
+    violations, warnings = [], []
+    metrics = sections.get(SECTION_KEY_FMT % 7, "")
+    monitoring = sections.get(SECTION_KEY_FMT % 10, "")
+
+    if not ROLLBACK_PATTERN.search(content):
+        violations.append(
+            "%s (preseed): No rollback trigger found - a small team must be able to turn "
+            "the feature off without shipping a release" % (SECTION_KEY_FMT % 10)
+        )
+    elif monitoring and not ROLLBACK_PATTERN.search(monitoring):
+        warnings.append(
+            "%s (preseed): Rollback is mentioned elsewhere but not in the monitoring section"
+            % (SECTION_KEY_FMT % 10)
+        )
+
+    if metrics and not GUARDRAIL_PATTERN.search(metrics):
+        violations.append(
+            "%s (preseed): No guardrail metric - nothing states what must not get worse"
+            % (SECTION_KEY_FMT % 7)
+        )
+
+    if metrics and not WINDOW_PATTERN.search(metrics):
+        warnings.append(
+            "%s (preseed): Targets carry no decision window - state when each target is "
+            "judged, e.g. gate at 2 weeks and outcome at 4-6 weeks" % (SECTION_KEY_FMT % 7)
+        )
+
+    hypothesis = sections.get(SECTION_KEY_FMT % 6, "")
+    if not VALIDATION_PATTERN.search(content) and "[TBD" not in hypothesis:
+        warnings.append(
+            "%s (preseed): Validation approach not stated - say whether this is a holdout, "
+            "a before-after comparison, or mark it [TBD]" % (SECTION_KEY_FMT % 6)
+        )
+
+    if RATE_TARGET_PATTERN.search(metrics) and not POWER_PATTERN.search(content):
+        warnings.append(
+            "%s (preseed): A rate target (retention/conversion/activation) is set with no "
+            "sample-size or detectability note - at small traffic the target may be "
+            "unfalsifiable" % (SECTION_KEY_FMT % 7)
+        )
+    return violations, warnings
+
+
+def apply_preseed(results):
+    """Waive large-team ceremony, refund its points, keep the small-team checks."""
+    waived = []
+    for key, section in results["sections"].items():
+        refund = 0
+        digits = re.sub(r"\D", "", key)
+        for scope, pattern, points, reason in PRESEED_EXEMPTIONS:
+            if scope != digits:
+                continue
+            for bucket in ("violations", "warnings"):
+                keep = []
+                for msg in section[bucket]:
+                    if pattern.search(msg):
+                        refund += points
+                        waived.append(
+                            {"section": key, "message": msg, "reason": reason}
+                        )
+                    else:
+                        keep.append(msg)
+                section[bucket] = keep
+        if refund:
+            section["score"] = min(section["max"], section["score"] + refund)
+    waived_msgs = {w["message"] for w in waived}
+    results["violations"] = [m for m in results["violations"] if m not in waived_msgs]
+    results["warnings"] = [m for m in results["warnings"] if m not in waived_msgs]
+    results["score"] = sum(s["score"] for s in results["sections"].values())
+    results["band"] = score_band(results["score"])
+    results["preseed_waived"] = waived
+    return results
+
+
+def validate(path: Path, preseed: bool = False) -> Dict[str, Any]:
     content = path.read_text(encoding="utf-8")
     sections = split_sections(content)
+    preseed = preseed or bool(PRESEED_MODE_PATTERN.search(sections.get(SECTION_KEY_FMT % 2, "")))
     results: Dict[str, Any] = {
         "path": str(path),
         "note": (
@@ -986,6 +1122,14 @@ def validate(path: Path) -> Dict[str, Any]:
     results["max_score"] = sum(SECTION_MAX.values())
     results["band"] = score_band(total)
     results["tbd_count"] = sum(s["tbd"] for s in results["sections"].values())
+    results["mode"] = "preseed" if preseed else "standard"
+    if preseed:
+        extra_violations, extra_warnings = preseed_extra_checks(content, sections)
+        results["violations"].extend(extra_violations)
+        results["warnings"].extend(extra_warnings)
+        results["cross_checks"]["preseed_violations"] = extra_violations
+        results["cross_checks"]["preseed_warnings"] = extra_warnings
+        apply_preseed(results)
     return results
 
 
@@ -994,13 +1138,23 @@ def main() -> int:
         description="Deterministic baseline validator for NatPRD PRDs.",
     )
     parser.add_argument("path", help="Path to the PRD markdown file")
+    parser.add_argument(
+        "--preseed",
+        action="store_true",
+        help=(
+            "Score with the preseed rubric: waive review chains, OKR alignment, "
+            "metric duty rosters and data sign-off; enforce rollback, guardrails, "
+            "decision windows and sample-size sanity instead. Also switched on by a "
+            "Mode row set to preseed in the Document Status table."
+        ),
+    )
     args = parser.parse_args()
     path = Path(args.path)
     if not path.is_file():
         print(json.dumps({"error": f"File not found: {path}"}), file=sys.stderr)
         return 2
     try:
-        results = validate(path)
+        results = validate(path, preseed=args.preseed)
     except Exception as e:
         print(
             json.dumps({"error": f"Validation crashed: {type(e).__name__}: {e}"}),

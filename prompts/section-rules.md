@@ -277,3 +277,19 @@ Applies to every section that asserts an externally-sourced fact (evidence, benc
 - An inline `[source: …]` annotation is missing a `retrieved:` date
 - A cited source does not appear in the §References / Sources table
 - The same source is cited inline with inconsistent identifiers
+
+---
+
+## Preseed mode
+
+When the PRD declares `Mode: preseed` in Document Status (team under ~10
+people, shipping in weeks), do not fail a section for a missing reviewer,
+approver, approval date, benchmark, OKR alignment, confidence level,
+post-launch learning plan, per-metric owner or timeline, coverage map,
+escalation path, review schedule, monitoring cadence, or data-team sign-off.
+
+Do fail it for a missing rollback trigger or guardrail metric, and flag targets
+that carry no decision window, an undeclared validation approach, or a rate
+target set without any sample-size reality check. See
+`validation-rules.md` for the full table.
+Prose style for preseed docs: `references/lean-style.md`.
