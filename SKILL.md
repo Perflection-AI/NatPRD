@@ -234,6 +234,34 @@ Full type list, Mermaid conventions, and worked examples are in `prompts/diagram
 that file whenever a diagram is offered or requested. Diagrams are an advisory enhancement: they
 do not change the 100-point validation score.
 
+### HTML diagram pages must be zoomable
+
+A diagram that only lives in markdown needs nothing extra. But when diagrams are rendered into an
+**HTML page** (`flow-visual.html`, `spec-visual.html`, and the like), that page **must** wire up
+mouse-wheel zoom — two lines, before `</body>` and in `<head>`:
+
+```html
+<link rel="stylesheet" href="<relative>/Skills/_kb/theme.css">
+<script src="<relative>/Skills/_kb/diagram-zoom.js" defer></script>
+```
+
+The script starts itself; the page calls nothing. It gives wheel zoom centred on the cursor, drag
+to pan, double-click to reset, and a +/−/⤢ button bar.
+
+**Why this is not optional.** These diagrams routinely carry a dozen nodes or a full swimlane, and
+at default size they are unreadable — a diagram nobody can read is a diagram nobody checks against
+the contract it depicts.
+
+**Two traps, both hit before.** The `.mmz` rules in `theme.css` are not decoration: without them
+zoom centres on the middle of the box instead of the cursor and the button bar floats off. A page
+that deliberately inlines its styles must inline that block too. And never require the page to
+call `enableZoomAll()` itself — the old script only exposed `window.KBZoom` and waited to be
+called, so forgetting was **silent**: script loads, console clean, diagram renders, wheel does
+nothing. A 2026-09-24 audit found 12 diagram pages carrying 70 diagrams of which exactly **one**
+could actually zoom.
+
+Conventions and the check command are in `Skills/_kb/diagram-design-system.html` (section 必).
+
 ---
 
 ## Version and Date Auto-Update Rules
