@@ -262,6 +262,11 @@ could actually zoom.
 
 Conventions and the check command are in `Skills/_kb/diagram-design-system.html` (section 必).
 
+**`flow-visual.html` is the plan half of a pair.** It shows 之前 vs 计划 and stays that way once
+written — do not redraw it to match what got built. When implementation lands, `timeline.py`
+creates `asbuilt-visual.html` (之前 vs 已实现) beside it, and the implementer draws that page from
+the merged code (`Skills/_kb/diagram-design-system.html` §竣; progress-protocol §9 step 3).
+
 ---
 
 ## Version and Date Auto-Update Rules
